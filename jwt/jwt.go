@@ -74,6 +74,11 @@ type Config struct {
 	// UseIDToken optionally specifies whether ID token should be used instead
 	// of access token when the server returns both.
 	UseIDToken bool
+
+	// requested_token_use parameter for on-benhalf-of flow.
+	// The parameter value should be: on_behalf_of
+	// See https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-on-behalf-of-flow
+	RequestedTokenUse string
 }
 
 // TokenSource returns a JWT TokenSource using the configuration
@@ -131,6 +136,9 @@ func (js jwtSource) Token() (*oauth2.Token, error) {
 	v := url.Values{}
 	v.Set("grant_type", defaultGrantType)
 	v.Set("assertion", payload)
+	if js.conf.RequestedTokenUse != "" {
+		v.Set("requested_token_use", js.conf.RequestedTokenUse)
+	}
 	resp, err := hc.PostForm(js.conf.TokenURL, v)
 	if err != nil {
 		return nil, fmt.Errorf("oauth2: cannot fetch token: %v", err)
